@@ -2,8 +2,26 @@
 #include <string.h>
 #include <stdlib.h>
 
-void showTasks(void) {
+int showTasks(void) {
+    FILE *fprt;
+    int position; 
+    char data[100];
+    fprt = fopen("data.txt", "r");
+    fseek(fprt, 0, SEEK_END);
+    position = ftell(fprt);
 
+    if (position != 0) {
+	fseek(fprt, 0, SEEK_SET);
+	while (fgets(data, sizeof(data), fprt)) {
+	    printf("content: %s", data);
+	}
+	fclose(fprt);
+	return 0;
+    } else {
+	printf("There is no items in to-do list.\n");
+	fclose(fprt);
+	return 1;
+    }
 }
 
 void compliteTask(void) {
@@ -38,33 +56,37 @@ void appendToFile(char *task) {
 }
 
 int main(void) {
-	char input[30];
-	char allowedInputs[4][10] = {"list", "add", "complite", "edit"};
-	int isInputAllowed = 0;
+    char input[30];
+    char allowedInputs[4][10] = {"list", "add", "complite", "edit"};
+    int isInputAllowed = 0;
 
-	createDataFile();
+    createDataFile();
 
-	do {
-		printf("input: ");
-		fgets(input, sizeof(input), stdin);
-		size_t length = strlen(input);
-		input[length - 1] = '\0';
+    do {
+	printf("input: ");
+	fgets(input, sizeof(input), stdin);
+	size_t length = strlen(input);
+	input[length - 1] = '\0';
 
-		for (int i = 0; i < 4; i++) {
-			int comparisonResult = strcmp(input, allowedInputs[i]);
-			if (comparisonResult == 0) {
-				isInputAllowed = 1;
-				break;
-			}
-		}
+	for (int i = 0; i < 4; i++) {
+	    int comparisonResult = strcmp(input, allowedInputs[i]);
+	    if (comparisonResult == 0) {
+		isInputAllowed = 1;
+		break;
+	    }
+	}
 
-		if (isInputAllowed == 1) {
-			printf("You good to go\n");
-		} else {
-			printf("You input in not allowed\n");
-		}
-	} while (isInputAllowed == 0);
+	if (isInputAllowed == 1) {
+	    printf("You good to go\n");
+	} else {
+	    printf("You input in not allowed\n");
+	}
+    } while (isInputAllowed == 0);
 
-	return 0;
+    if (strcmp(input, "list\n")) {
+	showTasks();
+    }
+
+    return 0;
 }
 
