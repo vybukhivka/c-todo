@@ -70,16 +70,16 @@ int handleTask(char *action) {
 		editedTask[0] = toUpper(editedTask[0]);
 	}
 
-		while (fgets(buffer, MAX_LINE_LENGTH, fptr)) {
-			if (current_line == taskNumber) {
-				if (strcmp(action, "edit") == 0) {
-					fprintf(fptr_tmp, "%s\n", editedTask);
-				}
-			} else {
-				fputs(buffer, fptr_tmp);
+	while (fgets(buffer, MAX_LINE_LENGTH, fptr)) {
+		if (current_line == taskNumber) {
+			if (strcmp(action, "edit") == 0) {
+				fprintf(fptr_tmp, "%s\n", editedTask);
 			}
-			current_line++;
+		} else {
+			fputs(buffer, fptr_tmp);
 		}
+		current_line++;
+	}
 
 	fclose(fptr);
 	fclose(fptr_tmp);
@@ -97,7 +97,6 @@ int createDataFile(void) {
 	}
 	fprt = fopen("data.txt", "w");
 	fclose(fprt);
-	printf("Data file created.\n");
 	return 0;
 }
 
@@ -107,7 +106,6 @@ void addTask(void) {
 
 	showTasks();
 
-	// get user input
 	char task[MAX_LINE_LENGTH];
 	printf("\nWrite your task: ");
 	fgets(task, sizeof(task), stdin);
@@ -115,10 +113,8 @@ void addTask(void) {
 	task[length - 1] = '\0';
 	task[0] = toUpper(task[0]);
 
-	// append to the data file 
 	fprintf(fprt, "%s\n", task);
 	fclose(fprt);
-	clearScreen();
 }
 
 int main(void) {
