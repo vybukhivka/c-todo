@@ -4,6 +4,14 @@
 
 #define MAX_LINE_LENGTH 256
 
+char toUpper(char c) {
+	char output = c;
+	if (output >= 'a' && output <= 'z') {
+		output -= 32;
+	}
+	return output;
+}
+
 int showTasks(void) {
     FILE *fprt;
     int position; 
@@ -63,9 +71,7 @@ int handleTask(char *action) {
 		printf("Write your task: ");
 		fgets(editedTask, sizeof(editedTask), stdin);
 		size_t length = strlen(editedTask);
-		if (editedTask[0] > 96) {
-			editedTask[0] -= 32;
-		}
+		editedTask[0] = toUpper(editedTask[0]);
 
 		fptr_tmp = fopen("data-tmp.txt", "w");
 		if (fptr_tmp == NULL) {
@@ -122,9 +128,7 @@ void addTask(void) {
 	fgets(task, sizeof(task), stdin);
 	size_t length = strlen(task);
 	task[length - 1] = '\0';
-	if (task[0] > 96) {
-		task[0] -= 32;
-	}
+	task[0] = toUpper(task[0]);
 
 	// append to the data file 
 	fprintf(fprt, "%s\n", task);
