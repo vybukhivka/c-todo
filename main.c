@@ -4,6 +4,15 @@
 
 #define MAX_LINE_LENGTH 256
 
+void getPath(char *buffer, const char *filename) {
+    char *home = getenv("HOME");
+    if (home) {
+        sprintf(buffer, "%s/%s", home, filename);
+    } else {
+        strcpy(buffer, filename);
+    }
+}
+
 void clearScreen(void) {
 	#ifdef _WIN32
 		system("cls");
@@ -13,39 +22,40 @@ void clearScreen(void) {
 }
 
 char toUpper(char c) {
-	char output = c;
-	if (output >= 'a' && output <= 'z') {
-		output -= 32;
-	}
-	return output;
+	return (c >= 'a' && c <= 'z') ? c - 32 : c;
 }
 
 int showTasks(void) {
-    FILE *fprt;
-    int position; 
-	int i = 1;
-    char data[1024];
-    fprt = fopen("data.txt", "r");
-    fseek(fprt, 0, SEEK_END);
-    position = ftell(fprt);
+	char path[512];
+	getPath(path, ".todo_data.txt");
 
-	if (position != 0) {
-		fseek(fprt, 0, SEEK_SET);
-		while (fgets(data, sizeof(data), fprt)) {
-			printf("[%i]: %s", i++, data);
-		}
-		fclose(fprt);
+	FILE *fprt = fopen(path, "r");
+	if (!fprt) {
+		printf("List is empty.\n");
 		return 0;
-	} else {
-		printf("There is no items in to-do list.\n");
-		fclose(fprt);
-		return 1;
 	}
+
+	char data[1024];
+	int i = 1;
+
+	while (fgets(data, sizeof(data), fprt)) {
+		printf("[%i]: %s", i++, data);
+	}
+
+	if (i == 1) printf("List is empty.\n");
+
+	fclose(fprt);
+	return 0;
 }
 
 int handleTask(char *action) {
-	FILE *fptr = fopen("data.txt", "r");
-	FILE *fptr_tmp = fopen("data-tmp.txt", "w");
+	char path_main[512], path_tmp[512];
+	getPath(path_main, ".todo_data.txt");
+	getPath(path_tmp, ".todo_tmp.txt");
+	FILE *fptr = fopen(path_main, "r");
+	FILE *fptr_tmp = fopen(path_tmp, "w");
+
+	clearScreen();
 
 	if(!fptr || !fptr_tmp) {
 		printf("Error opening the fiels.\n");
@@ -54,8 +64,7 @@ int handleTask(char *action) {
 		return 1;
 	}
 
-	char buffer[MAX_LINE_LENGTH];
-	char editedTask[MAX_LINE_LENGTH];
+	char buffer[MAX_LINE_LENGTH], editedTask[MAX_LINE_LENGTH];
 	int taskNumber, current_line = 1;
 
 	showTasks();
@@ -64,7 +73,7 @@ int handleTask(char *action) {
 	while(getchar() != '\n');
 
 	if (strcmp(action, "edit") == 0) {
-		printf("Write your replacement task: ");
+		printf("Write replacement: ");
 		fgets(editedTask, sizeof(editedTask), stdin);
 		editedTask[strcspn(editedTask, "\n")] = 0;
 		editedTask[0] = toUpper(editedTask[0]);
@@ -83,34 +92,24 @@ int handleTask(char *action) {
 
 	fclose(fptr);
 	fclose(fptr_tmp);
-	remove("data.txt");
-	rename("data-tmp.txt", "data.txt");
+	remove(path_main);
+	rename(path_tmp, path_main);
 	clearScreen();
 	return 0;
 }
 
-int createDataFile(void) {
-	FILE *fprt;
-	if ((fprt = fopen("data.txt", "r"))) {
-		fclose(fprt);
-		return 1;
-	}
-	fprt = fopen("data.txt", "w");
-	fclose(fprt);
-	return 0;
-}
-
 void addTask(void) {
-	FILE *fprt;
-	fprt = fopen("data.txt", "a");
+	char path[512];
+	getPath(path, ".todo_data.txt");
+	FILE *fprt = fopen(path, "a");
 
+	clearScreen();
 	showTasks();
 
 	char task[MAX_LINE_LENGTH];
 	printf("\nWrite your task: ");
 	fgets(task, sizeof(task), stdin);
-	size_t length = strlen(task);
-	task[length - 1] = '\0';
+	task[strcspn(task, "\n")] = 0;
 	task[0] = toUpper(task[0]);
 
 	fprintf(fprt, "%s\n", task);
@@ -119,56 +118,20 @@ void addTask(void) {
 
 int main(void) {
 	char input[30];
-	char allowedInputs[5][10] = {"list", "add", "done", "edit", "quit"};
 	int running = 1;
-
-	createDataFile();
 
 	while (running) {
 		clearScreen();
+
 		showTasks();
-		printf("\n");
-		printf("Commands: add, edit, done, or quit.\n");
-		printf("Input: ");
+		printf("\nCommands: add, edit, done, or quit.\nInput: ");
 		if (fgets(input, sizeof(input), stdin) == NULL) break;
 		input[strcspn(input, "\n")] = 0;
 
-		int isInputAllowed = 0;
-		for (int i = 0; i < 5; i++) {
-			if (strcmp(input, allowedInputs[i]) == 0) {
-				isInputAllowed = 1;
-				break;
-			}
-		}
-
-		clearScreen();
-
-		if (isInputAllowed == 0) {
-			printf("Invalid command. Use: add, edit, done, or quit.\n");
-			getchar();
-		}
-
-		if (strcmp(input, "list") == 0) {
-			showTasks();
-			printf("\nPress Enter to continue...");
-			getchar();
-		}
-
-		if (strcmp(input, "add") == 0) {
-			addTask();
-		}
-
-		if (strcmp(input, "edit") == 0) {
-			handleTask("edit");
-		}
-
-		if (strcmp(input, "done") == 0) {
-			handleTask("done");
-		}
-
-		if (strcmp(input, "quit") == 0) {
-			running = 0;
-		}
+		if (strcmp(input, "add") == 0) addTask();
+		else if (strcmp(input, "edit") == 0) handleTask("edit");
+		else if (strcmp(input, "done") == 0) handleTask("done");
+		else if (strcmp(input, "quit") == 0) running = 0;
 	} 
 
 	return 0;
