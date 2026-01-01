@@ -98,6 +98,48 @@ int handleTask(char *action) {
 	return 0;
 }
 
+void handleTaskDirect(char *action, int taskNumber) {
+	char path_main[512], path_tmp[512];
+    getPath(path_main, ".todo_data.txt");
+    getPath(path_tmp, ".todo_tmp.txt");
+
+    FILE *fptr = fopen(path_main, "r");
+    FILE *fptr_tmp = fopen(path_tmp, "w");
+
+    if (!fptr || !fptr_tmp) {
+        if (fptr) fclose(fptr);
+        if (fptr_tmp) fclose(fptr_tmp);
+        return;
+    }
+
+    char buffer[MAX_LINE_LENGTH];
+    int current_line = 1;
+    int found = 0;
+
+    while (fgets(buffer, MAX_LINE_LENGTH, fptr)) {
+        if (current_line == taskNumber) {
+            found = 1;
+            if (strcmp(action, "done") == 0) {
+                // skip
+            }
+        } else {
+            fputs(buffer, fptr_tmp);
+        }
+        current_line++;
+    }
+
+    fclose(fptr);
+    fclose(fptr_tmp);
+    remove(path_main);
+    rename(path_tmp, path_main);
+
+	if (found) {
+		printf("Task %d marked completed.\n", taskNumber);
+	} else {
+		printf("Task %d not found.\n", taskNumber);
+	}
+}
+
 void addTask(void) {
 	char path[512];
 	getPath(path, ".todo_data.txt");
@@ -116,23 +158,63 @@ void addTask(void) {
 	fclose(fprt);
 }
 
-int main(void) {
-	char input[30];
-	int running = 1;
+void addTaskDirect(char *task) {
+	char path[512];
+	getPath(path, ".todo_data.txt");
+	FILE *fprt = fopen(path, "a");
 
-	while (running) {
-		clearScreen();
+	task[0] = toUpper(task[0]);
+	fprintf(fprt, "%s\n", task);
+	fclose(fprt);
+	printf("Task added!\n");
+}
 
+int main(int argc, char *argv[]) {
+	if (argc == 1 || strcmp(argv[1], "list") == 0) {
 		showTasks();
-		printf("\nCommands: add, edit, done, or quit.\nInput: ");
-		if (fgets(input, sizeof(input), stdin) == NULL) break;
-		input[strcspn(input, "\n")] = 0;
+		return 0;
+	}
 
-		if (strcmp(input, "add") == 0) addTask();
-		else if (strcmp(input, "edit") == 0) handleTask("edit");
-		else if (strcmp(input, "done") == 0) handleTask("done");
-		else if (strcmp(input, "quit") == 0) running = 0;
-	} 
+	if (strcmp(argv[1], "add") == 0) {
+		if (argc < 3 || argc > 3) {
+			printf("Error: Provide a task description\n");
+			printf("Like: todo add \"your task\"\n");
+			return 1;
+		}	
+		addTaskDirect(argv[2]);
+		return 0;
+	}
+
+	if (strcmp(argv[1], "done") == 0) {
+		if (argc < 3) {
+			printf("Error: Specify a task number\n");
+			printf("Like: todo done 1\n");
+			return 1;
+		}
+		handleTaskDirect("done", atoi(argv[2]));
+		return 0;
+	}
+
+	if (strcmp(argv[1], "menu") == 0) {
+		if (argc < 3) {
+			char input[30];
+			int running = 1;
+
+			while (running) {
+				clearScreen();
+
+				showTasks();
+				printf("\nCommands: add, edit, done, or quit.\nInput: ");
+				if (fgets(input, sizeof(input), stdin) == NULL) break;
+				input[strcspn(input, "\n")] = 0;
+
+				if (strcmp(input, "add") == 0) addTask();
+				else if (strcmp(input, "edit") == 0) handleTask("edit");
+				else if (strcmp(input, "done") == 0) handleTask("done");
+				else if (strcmp(input, "quit") == 0) running = 0;
+			} 
+		}
+	}
 
 	return 0;
 }
