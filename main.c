@@ -13,18 +13,6 @@ void getPath(char *buffer, const char *filename) {
     }
 }
 
-void clearScreen(void) {
-	#ifdef _WIN32
-		system("cls");
-	#else
-		system("clear");
-	#endif 
-}
-
-char toUpper(char c) {
-	return (c >= 'a' && c <= 'z') ? c - 32 : c;
-}
-
 int showTasks(void) {
 	char path[512];
 	getPath(path, ".todo_data.txt");
@@ -54,8 +42,6 @@ int handleTask(char *action) {
 	getPath(path_tmp, ".todo_tmp.txt");
 	FILE *fptr = fopen(path_main, "r");
 	FILE *fptr_tmp = fopen(path_tmp, "w");
-
-	clearScreen();
 
 	if(!fptr || !fptr_tmp) {
 		printf("Error opening the fiels.\n");
@@ -94,7 +80,6 @@ int handleTask(char *action) {
 	fclose(fptr_tmp);
 	remove(path_main);
 	rename(path_tmp, path_main);
-	clearScreen();
 	return 0;
 }
 
@@ -145,7 +130,6 @@ void addTask(void) {
 	getPath(path, ".todo_data.txt");
 	FILE *fprt = fopen(path, "a");
 
-	clearScreen();
 	showTasks();
 
 	char task[MAX_LINE_LENGTH];
@@ -201,10 +185,7 @@ int main(int argc, char *argv[]) {
 			int running = 1;
 
 			while (running) {
-				clearScreen();
-
-				showTasks();
-				printf("\nCommands: add, edit, done, or quit.\nInput: ");
+				printf("Commands: add, edit, done, or quit.\nInput: ");
 				if (fgets(input, sizeof(input), stdin) == NULL) break;
 				input[strcspn(input, "\n")] = 0;
 
