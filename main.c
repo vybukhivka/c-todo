@@ -14,6 +14,33 @@ void getPath(char *buffer, const char *filename) {
     }
 }
 
+int getTasksNumber(void) {
+	char path[512];
+	getPath(path, ".todo_data.txt");
+
+	FILE *fprt = fopen(path, "r");
+	if (!fprt) {
+		printf("List is empty.\n");
+		return 0;
+	}
+
+	char data[1024];
+	int i = 0;
+
+	while (fgets(data, sizeof(data), fprt)) {
+		i++;
+	}
+
+	if (i == 0) {
+		printf("List is empty.\n");
+	} else if (i > 1) {
+		return i;
+	}
+
+	fclose(fprt);
+	return 0;
+}
+
 int showTasks(void) {
 	char path[512];
 	getPath(path, ".todo_data.txt");
@@ -42,7 +69,9 @@ int handleTask(char *action, int taskNumber, char *description) {
     getPath(path_main, ".todo_data.txt");
     getPath(path_tmp, ".todo_tmp.txt");
 
-	if (taskNumber < 0 || taskNumber > 20) {
+	int totalTasksNumber = getTasksNumber();
+
+	if (taskNumber < 0 || taskNumber > totalTasksNumber ) {
 		printf("Wrong task number\n");
 		return 1;
 	} 
@@ -97,6 +126,13 @@ int addTask(char *task) {
 	char path[512];
 	getPath(path, ".todo_data.txt");
 	FILE *fprt = fopen(path, "a");
+
+	int totalTasksNumber = getTasksNumber();
+	if (totalTasksNumber >= 10) {
+		printf("You have achieved the max number of tasks!\n");
+		printf("Complete at least on of existing tasks before adding a new one.\n");
+		return 1;		
+	}
 
 	task[0] = toupper(task[0]);
 	fprintf(fprt, "%s\n", task);
