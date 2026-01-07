@@ -56,6 +56,7 @@ int showTasks(void) {
 	FILE *fprt = fopen(path, "r");
 	if (!fprt) {
 		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": missing data file\n");
+		printf(COLOR_CYAN COLOR_BOLD "info" COLOR_RESET ": " COLOR_BOLD "todo add \"task description\"" COLOR_RESET " - to create data file and add a task\n");
 		return 0;
 	}
 
