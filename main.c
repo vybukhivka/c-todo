@@ -118,7 +118,7 @@ int handleTask(char *action, int taskNumber, char *description) {
 }
 
 int addTask(char *task) {
-	if (strlen(task) < MAX_LINE_LENGTH) {
+	if (strlen(task) > MAX_LINE_LENGTH) {
 		printf("Task is too verbose.\n");
 		return 1;
 	}
