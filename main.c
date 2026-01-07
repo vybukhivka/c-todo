@@ -5,6 +5,14 @@
 
 #define MAX_LINE_LENGTH 256
 
+#define COLOR_RESET  "\033[0m"
+#define COLOR_BOLD   "\033[1m"
+#define COLOR_RED    "\033[31m"
+#define COLOR_GREEN  "\033[32m"
+#define COLOR_YELLOW "\033[33m"
+#define COLOR_BLUE   "\033[34m"
+#define COLOR_CYAN   "\033[36m"
+
 void getPath(char *buffer, const char *filename) {
     char *home = getenv("HOME");
     if (home) {
@@ -20,7 +28,7 @@ int getTasksNumber(void) {
 
 	FILE *fprt = fopen(path, "r");
 	if (!fprt) {
-		printf("List is empty.\n");
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": missing data file\n");
 		return 0;
 	}
 
@@ -32,6 +40,7 @@ int getTasksNumber(void) {
 	}
 
 	if (i > 0) {
+		fclose(fprt);
 		return i;
 	}
 
@@ -45,7 +54,7 @@ int showTasks(void) {
 
 	FILE *fprt = fopen(path, "r");
 	if (!fprt) {
-		printf("List is empty.\n");
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": missing data file\n");
 		return 0;
 	}
 
@@ -56,7 +65,10 @@ int showTasks(void) {
 		printf("[%i] %s", i++, data);
 	}
 
-	if (i == 1) printf("List is empty.\n");
+	if (i == 1) {
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": list is empty\n");
+		printf(COLOR_CYAN COLOR_BOLD "info" COLOR_RESET ": todo add \"task description\" - to add the task\n");
+	} 
 
 	fclose(fprt);
 	return 0;
@@ -70,7 +82,7 @@ int handleTask(char *action, int taskNumber, char *description) {
 	int totalTasksNumber = getTasksNumber();
 
 	if (taskNumber < 0 || taskNumber > totalTasksNumber ) {
-		printf("Wrong task number.\n");
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": wrong task number\n");
 		return 1;
 	} 
 
@@ -91,11 +103,10 @@ int handleTask(char *action, int taskNumber, char *description) {
 		if (current_line == taskNumber) {
 			found = 1;
 			if (strcmp(action, "done") == 0) {
-				printf("Task %d marked completed.\n", taskNumber);
+				// skip
 			} else if (strcmp(action, "edit") == 0) {
 				description[0] = toupper(description[0]);
 				fprintf(fptr_tmp, "%s\n", description);
-				printf("Task %d updated.\n", taskNumber);
 			}
 		} else {
 			fputs(buffer, fptr_tmp);
@@ -109,7 +120,7 @@ int handleTask(char *action, int taskNumber, char *description) {
     rename(path_tmp, path_main);
 
 	if (!found) {
-		printf("Task %d not found.\n", taskNumber);
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": task " COLOR_BLUE COLOR_BOLD "%d" COLOR_RESET " not found\n", taskNumber);
 	}
 
 	return 0;
@@ -117,7 +128,8 @@ int handleTask(char *action, int taskNumber, char *description) {
 
 int addTask(char *task) {
 	if (strlen(task) > MAX_LINE_LENGTH) {
-		printf("Task is too verbose.\n");
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": task is too verbose\n");
+		printf(COLOR_CYAN COLOR_BOLD "info" COLOR_RESET ": 256 chars\n");
 		return 1;
 	}
 
@@ -127,15 +139,14 @@ int addTask(char *task) {
 
 	int totalTasksNumber = getTasksNumber();
 	if (totalTasksNumber >= 10) {
-		printf("You have achieved the max number of tasks!\n");
-		printf("Complete at least on of existing tasks before adding a new one.\n");
+		fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": max amount of tasks achieved\n");
+		printf(COLOR_CYAN COLOR_BOLD "info" COLOR_RESET ": complete at least one of existing tasks before adding next one\n");
 		return 1;		
 	}
 
 	task[0] = toupper(task[0]);
 	fprintf(fprt, "%s\n", task);
 	fclose(fprt);
-	printf("Task added.\n");
 	return 0;
 }
 
@@ -147,8 +158,8 @@ int main(int argc, char *argv[]) {
 
 	if (strcmp(argv[1], "add") == 0) {
 		if (argc < 3 || argc > 3) {
-			printf("Error: Provide a task description.\n");
-			printf("Like: todo add \"your task\".\n");
+			fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": missing description\n");
+			printf(COLOR_CYAN COLOR_BOLD "usage" COLOR_RESET ": todo add \"your task\"\n");
 			return 1;
 		}	
 		addTask(argv[2]);
@@ -157,8 +168,8 @@ int main(int argc, char *argv[]) {
 
 	if (strcmp(argv[1], "done") == 0) {
 		if (argc < 3) {
-			printf("Error: Specify a task number.\n");
-			printf("Like: todo done 1\n");
+			fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": missing task number\n");
+			printf(COLOR_CYAN COLOR_BOLD "usage" COLOR_RESET ": todo done 1\n");
 			return 1;
 		}
 		handleTask("done", atoi(argv[2]), NULL);
@@ -167,8 +178,8 @@ int main(int argc, char *argv[]) {
 
 	if (strcmp(argv[1], "edit") == 0) {
 		if (argc < 4) {
-			printf("Error: You need to provide 4 arguments.\n");
-			printf("Like: todo edit 1 \"new deskricption""\n");
+			fprintf(stderr, COLOR_RED COLOR_BOLD "error" COLOR_RESET ": not enough arguments\n");
+			printf(COLOR_CYAN COLOR_BOLD "usage" COLOR_RESET ": todo edit 1 \"new descricption\"\n");
 			return 1;
 		}
 		handleTask("edit", atoi(argv[2]), argv[3]);
