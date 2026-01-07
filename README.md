@@ -14,6 +14,9 @@ Run `todo` from any directory in your terminal.
 # To see your current list
 todo
 
+# Add a task to the list
+todo add "your task"
+
 # Update the text of an existing task by its list number.
 todo edit 1 "New description"
 
